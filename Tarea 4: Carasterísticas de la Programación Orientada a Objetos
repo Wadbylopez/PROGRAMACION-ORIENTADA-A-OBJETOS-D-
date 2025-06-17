@@ -1,0 +1,87 @@
+# sistema_reservas_futbol.py
+
+class Cancha:
+    def __init__(self, id_cancha, tipo, precio_hora):
+        self.id_cancha = id_cancha
+        self.tipo = tipo  # Ej: "Fútbol 7", "Fútbol 11"
+        self.precio_hora = precio_hora
+        self.disponible = True
+
+    def reservar(self):
+        if self.disponible:
+            self.disponible = False
+            print(f"La cancha {self.id_cancha} ha sido reservada.")
+        else:
+            print(f"La cancha {self.id_cancha} ya está ocupada.")
+
+    def cancelar_reserva(self):
+        self.disponible = True
+        print(f"La reserva de la cancha {self.id_cancha} ha sido cancelada.")
+
+    def __str__(self):
+        estado = "Disponible" if self.disponible else "Reservada"
+        return f"Cancha {self.id_cancha} - {self.tipo} - ${self.precio_hora}/hora - {estado}"
+
+
+class Reserva:
+    def __init__(self, cliente, cancha, hora):
+        self.cliente = cliente
+        self.cancha = cancha
+        self.hora = hora
+
+    def confirmar_reserva(self):
+        if self.cancha.disponible:
+            self.cancha.reservar()
+            print(f"Reserva confirmada para {self.cliente} a las {self.hora}.")
+        else:
+            print("No se pudo confirmar la reserva. La cancha está ocupada.")
+
+    def cancelar(self):
+        self.cancha.cancelar_reserva()
+        print(f"Reserva cancelada para {self.cliente} a las {self.hora}.")
+
+
+class ComplejoDeportivo:
+    def __init__(self, nombre):
+        self.nombre = nombre
+        self.canchas = []
+
+    def agregar_cancha(self, cancha):
+        self.canchas.append(cancha)
+
+    def mostrar_canchas_disponibles(self):
+        print(f"\nCanchas disponibles en {self.nombre}:")
+        for cancha in self.canchas:
+            if cancha.disponible:
+                print(cancha)
+
+    def buscar_cancha(self, id_cancha):
+        for cancha in self.canchas:
+            if cancha.id_cancha == id_cancha:
+                return cancha
+        return None
+
+
+# Programa principal
+if __name__ == "__main__":
+    complejo = ComplejoDeportivo("Complejo La Bombonera")
+
+    # Crear y agregar canchas
+    complejo.agregar_cancha(Cancha(1, "Fútbol 7", 25))
+    complejo.agregar_cancha(Cancha(2, "Fútbol 11", 40))
+
+    # Mostrar canchas disponibles
+    complejo.mostrar_canchas_disponibles()
+
+    # Crear reserva
+    cancha_seleccionada = complejo.buscar_cancha(1)
+    if cancha_seleccionada:
+        reserva1 = Reserva("Carlos Pérez", cancha_seleccionada, "18:00")
+        reserva1.confirmar_reserva()
+
+    # Mostrar canchas luego de la reserva
+    complejo.mostrar_canchas_disponibles()
+
+    # Cancelar reserva
+    reserva1.cancelar()
+    complejo.mostrar_canchas_disponibles()

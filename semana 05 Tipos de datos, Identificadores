@@ -1,0 +1,36 @@
+# Programa: conversor_temperaturas.py
+# Descripción:
+# Este programa permite al usuario convertir temperaturas entre grados Celsius y Fahrenheit.
+# Utiliza diferentes tipos de datos (float, string, boolean) y aplica buenas prácticas
+# en la nomenclatura de variables y funciones usando snake_case.
+
+def celsius_a_fahrenheit(celsius):
+    """Convierte de Celsius a Fahrenheit."""
+    return (celsius * 9 / 5) + 32
+
+def fahrenheit_a_celsius(fahrenheit):
+    """Convierte de Fahrenheit a Celsius."""
+    return (fahrenheit - 32) * 5 / 9
+
+# Inicio del programa
+print("=== Conversor de Temperaturas ===")
+
+# Solicita al usuario la unidad de medida que desea convertir
+unidad_origen = input("¿Qué unidad desea convertir? (C para Celsius, F para Fahrenheit): ").upper()
+
+# Variable booleana para verificar si la opción es válida
+opcion_valida = unidad_origen in ["C", "F"]
+
+if opcion_valida:
+    # Solicita el valor numérico de temperatura
+    temperatura = float(input("Ingrese el valor de la temperatura: "))
+
+    if unidad_origen == "C":
+        resultado = celsius_a_fahrenheit(temperatura)
+        print(f"{temperatura} °C equivale a {resultado:.2f} °F")
+    else:
+        resultado = fahrenheit_a_celsius(temperatura)
+        print(f"{temperatura} °F equivale a {resultado:.2f} °C")
+
+else:
+    print("Unidad no válida. Debe ingresar C o F.")

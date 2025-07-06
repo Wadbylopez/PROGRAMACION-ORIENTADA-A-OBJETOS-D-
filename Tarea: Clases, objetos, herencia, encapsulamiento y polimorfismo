@@ -1,0 +1,62 @@
+# Clase base: Animal
+class Animal:
+    def __init__(self, nombre, edad):
+        # Encapsulación: atributo privado
+        self.__nombre = nombre
+        self.edad = edad
+
+    # Método para obtener el nombre (getter)
+    def get_nombre(self):
+        return self.__nombre
+
+    # Método para establecer el nombre (setter)
+    def set_nombre(self, nuevo_nombre):
+        self.__nombre = nuevo_nombre
+
+    # Método que será sobrescrito en las clases derivadas (polimorfismo)
+    def hacer_sonido(self):
+        print("El animal hace un sonido genérico.")
+
+
+# Clase derivada: Perro
+class Perro(Animal):
+    def __init__(self, nombre, edad, raza):
+        # Llamamos al constructor de la clase base
+        super().__init__(nombre, edad)
+        self.raza = raza
+
+    # Sobrescribimos el método hacer_sonido (polimorfismo)
+    def hacer_sonido(self):
+        print(f"{self.get_nombre()} dice: ¡Guau guau!")
+
+
+# Clase derivada: Gato
+class Gato(Animal):
+    def __init__(self, nombre, edad, color):
+        # Llamamos al constructor de la clase base
+        super().__init__(nombre, edad)
+        self.color = color
+
+    # Sobrescribimos el método hacer_sonido (polimorfismo)
+    def hacer_sonido(self):
+        print(f"{self.get_nombre()} dice: ¡Miau miau!")
+
+
+# Crear instancias de las clases y demostrar su funcionalidad
+if __name__ == "__main__":
+    # Creamos un perro
+    perro = Perro("Tavo", 5, "Labrador")
+    # Creamos un gato
+    gato = Gato("Luffy", 3, "Blanco")
+
+    # Mostrar nombre (usando encapsulación)
+    print(f"El perro se llama: {perro.get_nombre()}")
+    print(f"El gato se llama: {gato.get_nombre()}")
+
+    # Cambiar el nombre del perro
+    perro.set_nombre("pucho")
+    print(f"El nuevo nombre del perro es: {perro.get_nombre()}")
+
+    # Mostrar sonidos (polimorfismo: métodos sobrescritos)
+    perro.hacer_sonido()
+    gato.hacer_sonido()

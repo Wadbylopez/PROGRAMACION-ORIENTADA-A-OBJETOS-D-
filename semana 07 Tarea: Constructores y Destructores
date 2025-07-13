@@ -1,0 +1,44 @@
+# Clase que representa un archivo de registro
+class Registro:
+    def __init__(self, nombre):
+        """
+        Constructor de la clase.
+        Se llama automáticamente cuando se crea un objeto de esta clase.
+        Inicializa el atributo 'nombre' y abre un archivo para registrar información.
+        """
+        self.nombre = nombre
+        self.archivo = open(f"{self.nombre}.txt", "w")
+        print(f"[+] Se ha creado el registro '{self.nombre}' y abierto el archivo.")
+
+    def escribir(self, mensaje):
+        """
+        Método para escribir un mensaje en el archivo de registro.
+        """
+        self.archivo.write(mensaje + "\n")
+        print(f"[i] Mensaje escrito en el registro '{self.nombre}'.")
+
+    def __del__(self):
+        """
+        Destructor de la clase.
+        Se llama automáticamente cuando el objeto es destruido (por ejemplo, cuando ya no se usa).
+        Aquí cerramos el archivo para liberar el recurso.
+        """
+        if hasattr(self, 'archivo') and not self.archivo.closed:
+            self.archivo.close()
+            print(f"[-] El archivo del registro '{self.nombre}' ha sido cerrado y el objeto destruido.")
+
+
+# Ejemplo de uso de la clase
+if __name__ == "__main__":
+    # Crear un registro
+    r1 = Registro("mi_registro")
+
+    # Escribir algunos mensajes
+    r1.escribir("Este es el primer mensaje.")
+    r1.escribir("Este es el segundo mensaje.")
+
+    # El destructor se llama automáticamente al final del programa o cuando eliminamos el objeto
+    # También podemos forzar su eliminación con del:
+    del r1
+
+    print("Programa terminado.")

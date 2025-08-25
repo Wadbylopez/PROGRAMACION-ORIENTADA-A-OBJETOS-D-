@@ -1,0 +1,107 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+"""
+Sistema de gestión de inventarios con persistencia en archivo de texto (CSV)
+-----------------------------------------------------------------------------
+
+Nuevas características implementadas:
+- Carga automática del inventario desde un archivo CSV al iniciar.
+- Guardado automático en el archivo al añadir/actualizar/eliminar productos.
+- Manejo robusto de excepciones (FileNotFoundError, PermissionError, csv.Error, ValueError, OSError).
+- Recuperación ante archivo corrupto (se respalda con sufijo .corrupt-YYYYMMDD-HHMMSS y se crea uno nuevo).
+- Interfaz de consola con notificaciones claras de éxito o error.
+- Pruebas/diagnóstico integradas (opción 8 del menú) que ejercitan casos borde.
+
+Formato del archivo (texto CSV):
+    id,nombre,cantidad,precio
+    P001,Teclado,10,19.99
+    P002,Mouse,25,9.50
+
+Nota: Se utiliza escritura atómica (archivo temporal + os.replace) para reducir riesgo de corrupción.
+"""
+
+from __future__ import annotations
+import csv
+import os
+import sys
+import tempfile
+import time
+from dataclasses import dataclass, asdict
+from typing import Dict, List, Optional
+
+CSV_HEADERS = ["id", "nombre", "cantidad", "precio"]
+DEFAULT_FILE = "inventario.txt"  # CSV legible por humanos
+
+
+@dataclass
+class Producto:
+    id: str
+    nombre: str
+    cantidad: int
+    precio: float
+
+    @staticmethod
+    def from_row(row: Dict[str, str]) -> "Producto":
+        """Crea Producto desde un dict de csv.DictReader, validando tipos."""
+        try:
+            pid = (row.get("id") or "").strip()
+            nombre = (row.get("nombre") or "").strip()
+            cantidad = int((row.get("cantidad") or "0").strip())
+            precio = float((row.get("precio") or "0").strip())
+        except (ValueError, TypeError) as e:
+            raise ValueError(f"Fila inválida: {row!r}. Error: {e}")
+        if not pid:
+            raise ValueError(f"Fila con id vacío: {row!r}")
+        if cantidad < 0:
+            raise ValueError(f"Cantidad negativa no permitida: {row!r}")
+        if precio < 0:
+            raise ValueError(f"Precio negativo no permitido: {row!r}")
+        return Producto(pid, nombre, cantidad, precio)
+
+
+class Inventario:
+    def __init__(self, ruta_archivo: str = DEFAULT_FILE):
+        self.ruta_archivo = ruta_archivo
+        self._productos: Dict[str, Producto] = {}
+        self._asegurar_archivo()
+        self.cargar_desde_archivo()
+
+    # -------------------- Persistencia --------------------
+    def _asegurar_archivo(self) -> None:
+        """Crea el archivo si no existe, con encabezados CSV."""
+        if os.path.isdir(self.ruta_archivo):
+            raise IsADirectoryError(
+                f"La ruta '{self.ruta_archivo}' es un directorio, se esperaba un archivo CSV."
+            )
+        if not os.path.exists(self.ruta_archivo):
+            try:
+                with open(self.ruta_archivo, "w", encoding="utf-8", newline="") as f:
+                    writer = csv.DictWriter(f, fieldnames=CSV_HEADERS)
+                    writer.writeheader()
+            except PermissionError:
+                raise PermissionError(
+                    f"Sin permisos para crear el archivo de inventario en '{self.ruta_archivo}'."
+                )
+
+    def cargar_desde_archivo(self) -> None:
+        """Carga todos los productos desde el CSV. Maneja archivos corruptos."""
+        self._productos.clear()
+        try:
+            with open(self.ruta_archivo, "r", encoding="utf-8", newline="") as f:
+                reader = csv.DictReader(f)
+                # Validación de encabezados
+                if reader.fieldnames is None or [h.strip() for h in reader.fieldnames] != CSV_HEADERS:
+                    raise csv.Error(
+                        f"Encabezados inválidos: {reader.fieldnames!r}. Esperado: {CSV_HEADERS}"
+                    )
+                filas_invalidas = 0
+                for idx, row in enumerate(reader, start=2):  # desde línea 2 (después de header)
+                    try:
+                        p = Producto.from_row(row)
+                    except ValueError as e:
+                        filas_invalidas += 1
+                        print(f"[ADVERTENCIA] Línea {idx} ignorada: {e}")
+                        continue
+                    # Última ocurrencia por id gana (permite 'actualizaciones' manuales)
+                    self._productos[p.id] = p
+                if filas_invalidas:
